@@ -1,19 +1,23 @@
 use std::env;
-use std::fs;
+use std::process;
+use rust_grep::Config;  // better to mention struct if it is the case, for function just the module 
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let target_binary_name = &args[0];
-    let query = &args[1];
-    let file_path = &args[2];   // String does not implement copy so cannot transfer ownership here
-    
+    //let config = parse_config(&args); // String does not implement copy so cannot transfer ownership here
+    //let config = Config::new_config(&args);
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Provlem parsing arguments: {err}");
+        process::exit(1);
+    });
+    println!("query is :{}",config.query);
+    println!("file_path is :{}", config.file_path);
 
-    println!("query is :{}",query);
-    println!("file_path is :{}", file_path);
+    if let Err(e) = rust_grep::run(config) {   // Better to use returned 'Result'
+        println!("Application error: {e}");
 
-    let contents = fs::read_to_string(file_path)
-    .expect("Should have been able to read the file");
+        process::exit(1);
+    }
 
-    println!("With text:\n{contents}");
 }
